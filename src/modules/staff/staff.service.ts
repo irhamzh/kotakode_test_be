@@ -5,12 +5,17 @@ import { StaffDto } from './dto/staff.dto';
 import { FindManyOptions, FindOptionsWhere, ILike } from 'typeorm';
 import { Staff } from './entities/staff.entity';
 import {
+  NoAttendanceFoundError,
   NoStaffFoundError,
   StaffAlreadyExistsError,
+  StaffClockedInError,
+  StaffClockedOutError,
 } from '../../errors/ResourceError';
 import { GetStaffDto } from './dto/get-staff.dto';
 import { PageMetaDto } from '../../common/dto/page-meta.dto';
 import { hashPassword } from '../../helpers/password.helpers';
+import { AttendanceDto } from '../attendance/dto/attendance.dto';
+import { Attendance } from '../attendance/entities/attendance.entity';
 
 @Injectable()
 export class StaffService {
@@ -104,5 +109,52 @@ export class StaffService {
     const staff = await Staff.findOne(findOpts);
     if (staff) StaffAlreadyExistsError();
     return true;
+  }
+
+  async clockIn(id: string, options: AttendanceDto): Promise<Attendance>{
+    const staff = await Staff.findOne({ 
+      where: { id: id },
+    });
+
+    if (!staff) NoStaffFoundError();
+
+    if (staff.latestAttendanceId) StaffClockedInError ();
+
+    const attendance = Attendance.create({
+      ...options,
+      arrivalTime: new Date(),
+      staff: staff
+    })
+
+    await attendance.save();
+
+    staff.latestAttendanceId = attendance.id;
+    staff.save();
+
+    return attendance;
+  }
+
+  async clockOut(id: string): Promise<Attendance>{
+    const staff = await Staff.findOne({ 
+      where: { id: id },
+    });
+
+    if (!staff) NoStaffFoundError();
+
+    if (!staff.latestAttendanceId) NoAttendanceFoundError();
+
+    const existAttendance = await Attendance.findOne({
+      where: { id: staff.latestAttendanceId }
+    });
+
+    if (existAttendance.exitTime != null) StaffClockedOutError();
+
+    existAttendance.exitTime = new Date();
+    existAttendance.save();
+
+    staff.latestAttendanceId = null;
+    staff.save();
+
+    return existAttendance;
   }
 }

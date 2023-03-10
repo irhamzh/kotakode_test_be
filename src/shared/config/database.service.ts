@@ -36,7 +36,8 @@ export class DatabaseConfigService {
     return this.getString('NODE_ENV');
   }
 
-  get postgresConfig(): TypeOrmModuleOptions {
+  // using mysql rather than posgres as the db
+  get mysqlConfig(): TypeOrmModuleOptions {
     const entities = [__dirname + '/../../modules/**/*.entity{.ts,.js}'];
     const migrations = [__dirname + '/../../database/migrations/*{.ts,.js}'];
 
@@ -44,7 +45,7 @@ export class DatabaseConfigService {
       entities,
       migrations,
       dropSchema: this.isTest,
-      type: 'postgres',
+      type: 'mysql',
       name: 'default',
       host: this.getString('DB_HOST'),
       port: this.getNumber('DB_PORT'),
@@ -55,6 +56,7 @@ export class DatabaseConfigService {
       synchronize: true,
       logging: this.getBoolean('ENABLE_ORM_LOGS'),
       namingStrategy: new SnakeNamingHelpers(),
+      autoLoadEntities: true,
     };
   }
 

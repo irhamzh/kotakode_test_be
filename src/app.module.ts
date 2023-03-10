@@ -15,7 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
       useFactory: (configService: DatabaseConfigService) =>
-        configService.postgresConfig,
+        configService.mysqlConfig,
       inject: [DatabaseConfigService],
     }),
     StaffModule,

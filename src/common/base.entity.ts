@@ -11,7 +11,7 @@ export class BaseEntity extends TOBaseEntity {
    * The unique id of the entity.
    */
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 }
 
 export class BaseEntityWithUUID extends TOBaseEntity {
